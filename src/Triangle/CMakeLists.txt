@@ -81,3 +81,7 @@ install(
    DESTINATION include
    COMPONENT Devel
    )
+export( TARGETS triangle triangle-api
+   FILE "${CMAKE_CURRENT_BINARY_DIR}/Triangle/TriangleTargets.cmake"
+   NAMESPACE Triangle::
+   )

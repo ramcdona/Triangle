@@ -1,9 +1,13 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 2.8)
 
 project(Triangle
    # triangle 1.6 was the last "official" version; i.e. 1.7 should be good to go:
-   VERSION 1.7.0
    )
+
+set(Triangle_VERSION_MAJOR 1)
+set(Triangle_VERSION_MINOR 7)
+set(Triangle_VERSION_PATCH 0)
+set(Triangle_VERSION 1.7.0)
 
 option(TRIANGLE_ENABLE_ACUTE "Enable the aCute extension." ON)
 option(BUILD_SHARED_LIBS "Build libraries as shared libraries." ON)
@@ -25,10 +29,6 @@ write_basic_package_version_file(
    COMPATIBILITY AnyNewerVersion
    )
 
-export(EXPORT TriangleTargets
-   FILE "${CMAKE_CURRENT_BINARY_DIR}/Triangle/TriangleTargets.cmake"
-   NAMESPACE Triangle::
-   )
 configure_file(cmake/TriangleConfig.cmake
    "${CMAKE_CURRENT_BINARY_DIR}/Triangle/TriangleConfig.cmake"
    COPYONLY
