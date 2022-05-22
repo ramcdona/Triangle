@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 project(Triangle
    # triangle 1.6 was the last "official" version; i.e. 1.7 should be good to go:
