@@ -14,6 +14,25 @@ set_target_properties(triangle
    POSITION_INDEPENDENT_CODE TRUE
    )
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set_target_properties( triangle PROPERTIES COMPILE_FLAGS "-ffp-model=strict")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+        set_target_properties( triangle PROPERTIES COMPILE_FLAGS "-ffp-model=strict")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set_target_properties( triangle PROPERTIES COMPILE_FLAGS "-frounding-math -fsignaling-nans")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    if (WIN32)
+        set_target_properties( triangle PROPERTIES COMPILE_FLAGS "-fp:strict")
+    else()
+        set_target_properties( triangle PROPERTIES COMPILE_FLAGS "-fp-model=strict")
+    endif()
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    set_target_properties( triangle PROPERTIES COMPILE_FLAGS "-fp:strict")
+else()
+    message("Compiler not recognized")
+    message(${CMAKE_CXX_COMPILER_ID})
+endif()
+
 target_link_libraries(triangle PRIVATE -lm)
 target_include_directories(triangle
    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>
@@ -36,6 +55,25 @@ add_library(triangle-api
    triangle_helper.c
    )
 add_library(Triangle::triangle-api ALIAS triangle-api)
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set_target_properties( triangle-api PROPERTIES COMPILE_FLAGS "-ffp-model=strict")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+    set_target_properties( triangle-api PROPERTIES COMPILE_FLAGS "-ffp-model=strict")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set_target_properties( triangle-api PROPERTIES COMPILE_FLAGS "-frounding-math -fsignaling-nans")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    if (WIN32)
+        set_target_properties( triangle-api PROPERTIES COMPILE_FLAGS "-fp:strict")
+    else()
+        set_target_properties( triangle-api PROPERTIES COMPILE_FLAGS "-fp-model=strict")
+    endif()
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    set_target_properties( triangle-api PROPERTIES COMPILE_FLAGS "-fp:strict")
+else()
+    message("Compiler not recognized")
+    message(${CMAKE_CXX_COMPILER_ID})
+endif()
 
 target_link_libraries(triangle-api
 	PUBLIC
