@@ -5743,7 +5743,8 @@ enum finddirectionresult finddirection(mesh *m, behavior *b,
       rightflag = 0;
     }
   }
-  while (leftflag) {
+  int tries = 0;
+  while (leftflag && tries < NMAXTRY) {
     /* Turn left until satisfied. */
     onextself(*searchtri);
     if (searchtri->tri == m->dummytri) {
@@ -5756,8 +5757,9 @@ enum finddirectionresult finddirection(mesh *m, behavior *b,
     rightccw = leftccw;
     leftccw = counterclockwise(m, b, searchpoint, startvertex, leftvertex);
     leftflag = leftccw > 0.0;
+    tries++;
   }
-  while (rightflag) {
+  while (rightflag && tries < NMAXTRY ) {
     /* Turn right until satisfied. */
     oprevself(*searchtri);
     if (searchtri->tri == m->dummytri) {
@@ -5770,6 +5772,12 @@ enum finddirectionresult finddirection(mesh *m, behavior *b,
     leftccw = rightccw;
     rightccw = counterclockwise(m, b, startvertex, searchpoint, rightvertex);
     rightflag = rightccw > 0.0;
+    tries++;
+  }
+  if ( tries >= NMAXTRY )
+  {
+    *status = TRI_FIND_DIRECTION;
+    return WITHIN;
   }
   if (leftccw == 0.0) {
     return LEFTCOLLINEAR;
