@@ -163,7 +163,7 @@ int file_writepoly(mesh *m, behavior *b, FILE *polyfile,
 				vertexmark(endpoint1), vertexmark(endpoint2));
 		} else {
 			fprintf(polyfile, "%4ld    %4d  %4d    %4d\n", subsegnumber,
-				vertexmark(endpoint1), vertexmark(endpoint2), mark(subsegloop));
+				vertexmark(endpoint1), vertexmark(endpoint2), bnd_mark(subsegloop));
 		}
 
 		subsegloop.ss = subsegtraverse(m);
@@ -246,7 +246,7 @@ int file_writeedges(mesh *m, behavior *b, FILE *edgefile)
 									vertexmark(p1), vertexmark(p2), 0);
 							} else {
 								fprintf(edgefile, "%4ld   %d  %d  %d\n", edgenumber,
-									vertexmark(p1), vertexmark(p2), mark(checkmark));
+									vertexmark(p1), vertexmark(p2), bnd_mark(checkmark));
 							}
 						} else {
 							fprintf(edgefile, "%4ld   %d  %d  %d\n", edgenumber,

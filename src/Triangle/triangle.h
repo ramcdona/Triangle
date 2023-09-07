@@ -992,7 +992,7 @@ typedef struct rect_t {
 /*   used to hold user-defined tags for setting boundary conditions in       */
 /*   finite element solvers.                                                 */
 
-#define mark(osub)  (* (int *) ((osub).ss + 8))
+#define bnd_mark(osub)  (* (int *) ((osub).ss + 8))
 
 #define setmark(osub, value)                                                  \
   * (int *) ((osub).ss + 8) = value

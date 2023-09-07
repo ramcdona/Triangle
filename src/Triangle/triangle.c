@@ -657,7 +657,7 @@ void printsubseg(mesh *m, behavior *b, struct osub *s)
   vertex printvertex;
 
   printf("subsegment x"LX" with orientation %d and mark %d:\n",
-         (ULONG_PTR) s->ss, s->ssorient, mark(*s));
+         (ULONG_PTR) s->ss, s->ssorient, bnd_mark(*s));
   sdecode(s->ss[0], printsh);
   if (printsh.ss == m->dummysub) {
     printf("    [0] = No subsegment\n");
@@ -2569,7 +2569,7 @@ void insertsubseg(mesh *m, behavior *b, struct otri *tri,
     tsbond(oppotri, newsubseg);
     setmark(newsubseg, subsegmark);
   } else {
-    if (mark(newsubseg) == 0) {
+    if (bnd_mark(newsubseg) == 0) {
       setmark(newsubseg, subsegmark);
     }
   }
@@ -3071,7 +3071,7 @@ enum insertvertexresult insertvertex(mesh *m, behavior *b,
       segdest(*splitseg, segmentdest);
       ssymself(*splitseg);
       spivot(*splitseg, rightsubseg);
-      insertsubseg(m, b, &newbotright, mark(*splitseg));
+      insertsubseg(m, b, &newbotright, bnd_mark(*splitseg));
       tspivot(newbotright, newsubseg);
       setsegorg(newsubseg, segmentorg);
       setsegdest(newsubseg, segmentdest);
@@ -3082,7 +3082,7 @@ enum insertvertexresult insertvertex(mesh *m, behavior *b,
       /* Transfer the subsegment's boundary marker to the vertex */
       /*   if required.                                          */
       if (vertexmark(newvertex) == 0) {
-        setvertexmark(newvertex, mark(*splitseg));
+        setvertexmark(newvertex, bnd_mark(*splitseg));
       }
     }
 
@@ -5855,7 +5855,7 @@ void segmentintersection(mesh *m, behavior *b,
   for (i = 0; i < 2 + m->nextras; i++) {
     newvertex[i] = torg[i] + split * (tdest[i] - torg[i]);
   }
-  setvertexmark(newvertex, mark(*splitsubseg));
+  setvertexmark(newvertex, bnd_mark(*splitsubseg));
   setvertextype(newvertex, INPUTVERTEX);
   /* Insert the intersection vertex.  This should always succeed. */
   success = insertvertex(m, b, newvertex, splittri, splitsubseg, 0, 0, 0);
@@ -6573,7 +6573,7 @@ void infecthull(mesh *m, behavior *b)
         }
       } else {
         /* The triangle is protected; set boundary markers if appropriate. */
-        if (mark(hullsubseg) == 0) {
+        if (bnd_mark(hullsubseg) == 0) {
           setmark(hullsubseg, 1);
           org(hulltri, horg);
           dest(hulltri, hdest);
@@ -6671,7 +6671,7 @@ void plague(mesh *m, behavior *b)
           /* Remove this triangle from the subsegment. */
           stdissolve(neighborsubseg);
           /* The subsegment becomes a boundary.  Set markers accordingly. */
-          if (mark(neighborsubseg) == 0) {
+          if (bnd_mark(neighborsubseg) == 0) {
             setmark(neighborsubseg, 1);
           }
           org(neighbor, norg);
@@ -7234,7 +7234,7 @@ void splitencsegs(mesh *m, behavior *b, int triflaws, int *status)
           }
         }
 
-        setvertexmark(newvertex, mark(currentenc));
+        setvertexmark(newvertex, bnd_mark(currentenc));
         setvertextype(newvertex, SEGMENTVERTEX);
         /* Check whether the new vertex lies on an endpoint. */
         if (((newvertex[0] == eorg[0]) && (newvertex[1] == eorg[1])) ||
@@ -7559,7 +7559,7 @@ void highorder(mesh *m, behavior *b)
           tspivot(triangleloop, checkmark);
           /* If this edge is a segment, transfer the marker to the new node. */
           if (checkmark.ss != m->dummysub) {
-            setvertexmark(newvertex, mark(checkmark));
+            setvertexmark(newvertex, bnd_mark(checkmark));
             setvertextype(newvertex, SEGMENTVERTEX);
           }
         }
@@ -7857,7 +7857,7 @@ void writepoly(mesh *m, behavior *b,
     slist[index++] = vertexmark(endpoint2);
     if (!b->nobound) {
       /* Copy the boundary marker. */
-      smlist[subsegnumber - b->firstnumber] = mark(subsegloop);
+      smlist[subsegnumber - b->firstnumber] = bnd_mark(subsegloop);
     }
 
     subsegloop.ss = subsegtraverse(m);
@@ -7923,7 +7923,7 @@ void writeedges(mesh *m, behavior *b,
             if (checkmark.ss == m->dummysub) {
               emlist[edgenumber - b->firstnumber] = 0;
             } else {
-              emlist[edgenumber - b->firstnumber] = mark(checkmark);
+              emlist[edgenumber - b->firstnumber] = bnd_mark(checkmark);
             }
           } else {
             emlist[edgenumber - b->firstnumber] = trisym.tri == m->dummytri;
