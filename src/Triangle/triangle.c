@@ -1825,8 +1825,14 @@ struct badtriang *dequeuebadtriang(mesh *m)
   if (m->firstnonemptyq < 0) {
     return (struct badtriang *) NULL;
   }
+  if (m->firstnonemptyq >= 4096) {
+    return (struct badtriang *) NULL;
+  }
   /* Find the first triangle of the highest-priority queue. */
   result = m->queuefront[m->firstnonemptyq];
+  if ( !result ) {
+    return (struct badtriang *) NULL;
+  }
   /* Remove the triangle from the queue. */
   m->queuefront[m->firstnonemptyq] = result->nexttriang;
   /* If this queue is now empty, note the new highest-priority */
