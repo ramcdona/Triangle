@@ -1492,7 +1492,7 @@ void triangleinit(mesh *m)
   m->hyperbolacount = m->circletopcount = m->circumcentercount = 0;
   randomseed = 1;
 
-  exactinit();                     /* Initialize exact arithmetic constants. */
+    tri_exactinit();                     /* Initialize exact arithmetic constants. */
 
 #ifndef NO_ACUTE
   m->acute_mem = (acutepool *) NULL;
@@ -1551,7 +1551,7 @@ int checkmesh(mesh *m, behavior *b)
       if (triangleloop.orient == 0) {       /* Only test for inversion once. */
         /* Test if the triangle is flat or inverted. */
         apex(triangleloop, triapex);
-        if (counterclockwise(m, b, triorg, tridest, triapex) <= 0.0) {
+        if ( tri_counterclockwise( m, b, triorg, tridest, triapex ) <= 0.0) {
 #ifdef _DEBUG
           printf("  !! !! Inverted ");
           printtriangle(m, b, &triangleloop);
@@ -1661,7 +1661,7 @@ int checkdelaunay(mesh *m, behavior *b)
         }
       }
       if (shouldbedelaunay) {
-        if (nonregular(m, b, triorg, tridest, triapex, oppoapex) > 0.0) {
+        if ( tri_nonregular( m, b, triorg, tridest, triapex, oppoapex ) > 0.0) {
 #ifdef _DEBUG
           if (!b->weighted) {
             printf("  !! !! Non-Delaunay pair of triangles:\n");
@@ -2284,10 +2284,10 @@ enum locateresult preciselocate(mesh *m, behavior *b,
     }
     /* Does the point lie on the other side of the line defined by the */
     /*   triangle edge opposite the triangle's destination?            */
-    destorient = counterclockwise(m, b, forg, fapex, searchpoint);
+    destorient = tri_counterclockwise( m, b, forg, fapex, searchpoint );
     /* Does the point lie on the other side of the line defined by the */
     /*   triangle edge opposite the triangle's origin?                 */
-    orgorient = counterclockwise(m, b, fapex, fdest, searchpoint);
+    orgorient = tri_counterclockwise( m, b, fapex, fdest, searchpoint );
     if (destorient > 0.0) {
       if (orgorient > 0.0) {
         /* Move left if the inner product of (fapex - searchpoint) and  */
@@ -2498,7 +2498,7 @@ enum locateresult locate(mesh *m, behavior *b,
     return ONVERTEX;
   }
   /* Orient `searchtri' to fit the preconditions of calling preciselocate(). */
-  ahead = counterclockwise(m, b, torg, tdest, searchpoint);
+  ahead = tri_counterclockwise( m, b, torg, tdest, searchpoint );
   if (ahead < 0.0) {
     /* Turn around so that `searchpoint' is to the left of the */
     /*   edge specified by `searchtri'.                        */
@@ -3274,7 +3274,7 @@ enum insertvertexresult insertvertex(mesh *m, behavior *b,
           /*   the boundary of the triangulation.  'farvertex' might be   */
           /*   infinite as well, but trust me, this same condition should */
           /*   be applied.                                                */
-          doflip = counterclockwise(m, b, newvertex, rightvertex, farvertex)
+          doflip = tri_counterclockwise( m, b, newvertex, rightvertex, farvertex )
                    > 0.0;
         } else if ((rightvertex == m->infvertex1) ||
                    (rightvertex == m->infvertex2) ||
@@ -3283,7 +3283,7 @@ enum insertvertexresult insertvertex(mesh *m, behavior *b,
           /*   the boundary of the triangulation.  'farvertex' might be   */
           /*   infinite as well, but trust me, this same condition should */
           /*   be applied.                                                */
-          doflip = counterclockwise(m, b, farvertex, leftvertex, newvertex)
+          doflip = tri_counterclockwise( m, b, farvertex, leftvertex, newvertex )
                    > 0.0;
         } else if ((farvertex == m->infvertex1) ||
                    (farvertex == m->infvertex2) ||
@@ -3293,8 +3293,8 @@ enum insertvertexresult insertvertex(mesh *m, behavior *b,
           doflip = 0;
         } else {
           /* Test whether the edge is locally Delaunay. */
-          doflip = incircle(m, b, leftvertex, newvertex, rightvertex,
-                            farvertex) > 0.0;
+          doflip = tri_incircle( m, b, leftvertex, newvertex, rightvertex,
+                                 farvertex ) > 0.0;
         }
         if (doflip) {
           /* We made it!  Flip the edge `horiz' by rotating its containing */
@@ -3529,8 +3529,8 @@ void triangulatepolygon(mesh *m, behavior *b,
     onextself(testtri);
     dest(testtri, testvertex);
     /* Is this a better vertex? */
-    if (incircle(m, b, leftbasevertex, rightbasevertex, bestvertex,
-                 testvertex) > 0.0) {
+    if ( tri_incircle( m, b, leftbasevertex, rightbasevertex, bestvertex,
+                       testvertex ) > 0.0) {
       otricopy(testtri, besttri);
       bestvertex = testvertex;
       bestnumber = i;
@@ -4076,8 +4076,8 @@ void mergehulls(mesh *m, behavior *b, struct otri *farleft,
   do {
     changemade = 0;
     /* Make innerleftdest the "bottommost" vertex of the left hull. */
-    if (counterclockwise(m, b, innerleftdest, innerleftapex, innerrightorg) >
-        0.0) {
+    if ( tri_counterclockwise( m, b, innerleftdest, innerleftapex, innerrightorg ) >
+         0.0) {
       lprevself(*innerleft);
       symself(*innerleft);
       innerleftdest = innerleftapex;
@@ -4085,8 +4085,8 @@ void mergehulls(mesh *m, behavior *b, struct otri *farleft,
       changemade = 1;
     }
     /* Make innerrightorg the "bottommost" vertex of the right hull. */
-    if (counterclockwise(m, b, innerrightapex, innerrightorg, innerleftdest) >
-        0.0) {
+    if ( tri_counterclockwise( m, b, innerrightapex, innerrightorg, innerleftdest ) >
+         0.0) {
       lnextself(*innerright);
       symself(*innerright);
       innerrightorg = innerrightapex;
@@ -4129,10 +4129,10 @@ void mergehulls(mesh *m, behavior *b, struct otri *farleft,
     /*   because even though the left triangulation might seem finished now, */
     /*   moving up on the right triangulation might reveal a new vertex of   */
     /*   the left triangulation.  And vice-versa.)                           */
-    leftfinished = counterclockwise(m, b, upperleft, lowerleft, lowerright) <=
+    leftfinished = tri_counterclockwise( m, b, upperleft, lowerleft, lowerright ) <=
                    0.0;
-    rightfinished = counterclockwise(m, b, upperright, lowerleft, lowerright)
-                 <= 0.0;
+    rightfinished = tri_counterclockwise( m, b, upperright, lowerleft, lowerright )
+                    <= 0.0;
     if (leftfinished && rightfinished) {
       /* Create the top new bounding triangle. */
       maketriangle(m, b, &nextedge);
@@ -4182,7 +4182,7 @@ void mergehulls(mesh *m, behavior *b, struct otri *farleft,
       /*   triangulation would have been eaten right through.      */
       if (nextapex != (vertex) NULL) {
         /* Check whether the edge is Delaunay. */
-        badedge = incircle(m, b, lowerleft, lowerright, upperleft, nextapex) >
+        badedge = tri_incircle( m, b, lowerleft, lowerright, upperleft, nextapex ) >
                   0.0;
         while (badedge) {
           /* Eliminate the edge with an edge flip.  As a result, the    */
@@ -4211,8 +4211,8 @@ void mergehulls(mesh *m, behavior *b, struct otri *farleft,
           apex(nextedge, nextapex);
           if (nextapex != (vertex) NULL) {
             /* Check whether the edge is Delaunay. */
-            badedge = incircle(m, b, lowerleft, lowerright, upperleft,
-                               nextapex) > 0.0;
+            badedge = tri_incircle( m, b, lowerleft, lowerright, upperleft,
+                                    nextapex ) > 0.0;
           } else {
             /* Avoid eating right through the triangulation. */
             badedge = 0;
@@ -4230,7 +4230,7 @@ void mergehulls(mesh *m, behavior *b, struct otri *farleft,
       /*   triangulation would have been eaten right through.      */
       if (nextapex != (vertex) NULL) {
         /* Check whether the edge is Delaunay. */
-        badedge = incircle(m, b, lowerleft, lowerright, upperright, nextapex) >
+        badedge = tri_incircle( m, b, lowerleft, lowerright, upperright, nextapex ) >
                   0.0;
         while (badedge) {
           /* Eliminate the edge with an edge flip.  As a result, the     */
@@ -4259,8 +4259,8 @@ void mergehulls(mesh *m, behavior *b, struct otri *farleft,
           apex(nextedge, nextapex);
           if (nextapex != (vertex) NULL) {
             /* Check whether the edge is Delaunay. */
-            badedge = incircle(m, b, lowerleft, lowerright, upperright,
-                               nextapex) > 0.0;
+            badedge = tri_incircle( m, b, lowerleft, lowerright, upperright,
+                                    nextapex ) > 0.0;
           } else {
             /* Avoid eating right through the triangulation. */
             badedge = 0;
@@ -4269,8 +4269,8 @@ void mergehulls(mesh *m, behavior *b, struct otri *farleft,
       }
     }
     if (leftfinished || (!rightfinished &&
-           (incircle(m, b, upperleft, lowerleft, lowerright, upperright) >
-            0.0))) {
+           ( tri_incircle( m, b, upperleft, lowerleft, lowerright, upperright ) >
+             0.0))) {
       /* Knit the triangulations, adding an edge from `lowerleft' */
       /*   to `upperright'.                                       */
       bond(baseedge, rightcand);
@@ -4347,7 +4347,7 @@ void divconqrecurse(mesh *m, behavior *b, vertex *sortarray,
     maketriangle(m, b, &tri1);
     maketriangle(m, b, &tri2);
     maketriangle(m, b, &tri3);
-    area = counterclockwise(m, b, sortarray[0], sortarray[1], sortarray[2]);
+    area = tri_counterclockwise( m, b, sortarray[ 0 ], sortarray[ 1 ], sortarray[ 2 ] );
     if (area == 0.0) {
       /* Three collinear vertices; the triangulation is two edges. */
       setorg(midtri, sortarray[0]);
@@ -5115,7 +5115,7 @@ struct splaynode *circletopinsert(mesh *m, behavior *b,
   REAL searchpoint[2];
   struct otri dummytri;
 
-  ccwabc = counterclockwise(m, b, pa, pb, pc);
+  ccwabc = tri_counterclockwise( m, b, pa, pb, pc );
   xac = pa[0] - pc[0];
   yac = pa[1] - pc[1];
   xbc = pb[0] - pc[0];
@@ -5321,7 +5321,7 @@ long sweeplinedelaunay(mesh *m, behavior *b)
       apex(farlefttri, leftvertex);
       dest(lefttri, midvertex);
       apex(lefttri, rightvertex);
-      lefttest = counterclockwise(m, b, leftvertex, midvertex, rightvertex);
+      lefttest = tri_counterclockwise( m, b, leftvertex, midvertex, rightvertex );
       if (lefttest > 0.0) {
         newevent = freeevents;
         freeevents = (struct event *) freeevents->eventptr;
@@ -5336,7 +5336,7 @@ long sweeplinedelaunay(mesh *m, behavior *b)
       apex(righttri, leftvertex);
       org(righttri, midvertex);
       apex(farrighttri, rightvertex);
-      righttest = counterclockwise(m, b, leftvertex, midvertex, rightvertex);
+      righttest = tri_counterclockwise( m, b, leftvertex, midvertex, rightvertex );
       if (righttest > 0.0) {
         newevent = freeevents;
         freeevents = (struct event *) freeevents->eventptr;
@@ -5734,10 +5734,10 @@ enum finddirectionresult finddirection(mesh *m, behavior *b,
   dest(*searchtri, rightvertex);
   apex(*searchtri, leftvertex);
   /* Is `searchpoint' to the left? */
-  leftccw = counterclockwise(m, b, searchpoint, startvertex, leftvertex);
+  leftccw = tri_counterclockwise( m, b, searchpoint, startvertex, leftvertex );
   leftflag = leftccw > 0.0;
   /* Is `searchpoint' to the right? */
-  rightccw = counterclockwise(m, b, startvertex, searchpoint, rightvertex);
+  rightccw = tri_counterclockwise( m, b, startvertex, searchpoint, rightvertex );
   rightflag = rightccw > 0.0;
   if (leftflag && rightflag) {
     /* `searchtri' faces directly away from `searchpoint'.  We could go left */
@@ -5761,7 +5761,7 @@ enum finddirectionresult finddirection(mesh *m, behavior *b,
     }
     apex(*searchtri, leftvertex);
     rightccw = leftccw;
-    leftccw = counterclockwise(m, b, searchpoint, startvertex, leftvertex);
+    leftccw = tri_counterclockwise( m, b, searchpoint, startvertex, leftvertex );
     leftflag = leftccw > 0.0;
     tries++;
   }
@@ -5776,7 +5776,7 @@ enum finddirectionresult finddirection(mesh *m, behavior *b,
     }
     dest(*searchtri, rightvertex);
     leftccw = rightccw;
-    rightccw = counterclockwise(m, b, startvertex, searchpoint, rightvertex);
+    rightccw = tri_counterclockwise( m, b, startvertex, searchpoint, rightvertex );
     rightflag = rightccw > 0.0;
     tries++;
   }
@@ -6145,25 +6145,25 @@ void delaunayfixup(mesh *m, behavior *b,
   apex(fartri, farvertex);
   /* Check whether the previous polygon vertex is a reflex vertex. */
   if (leftside) {
-    if (counterclockwise(m, b, nearvertex, leftvertex, farvertex) <= 0.0) {
+    if ( tri_counterclockwise( m, b, nearvertex, leftvertex, farvertex ) <= 0.0) {
       /* leftvertex is a reflex vertex too.  Nothing can */
       /*   be done until a convex section is found.      */
       return;
     }
   } else {
-    if (counterclockwise(m, b, farvertex, rightvertex, nearvertex) <= 0.0) {
+    if ( tri_counterclockwise( m, b, farvertex, rightvertex, nearvertex ) <= 0.0) {
       /* rightvertex is a reflex vertex too.  Nothing can */
       /*   be done until a convex section is found.       */
       return;
     }
   }
-  if (counterclockwise(m, b, rightvertex, leftvertex, farvertex) > 0.0) {
+  if ( tri_counterclockwise( m, b, rightvertex, leftvertex, farvertex ) > 0.0) {
     /* fartri is not an inverted triangle, and farvertex is not a reflex */
     /*   vertex.  As there are no reflex vertices, fixuptri isn't an     */
     /*   inverted triangle, either.  Hence, test the edge between the    */
     /*   triangles to ensure it is locally Delaunay.                     */
-    if (incircle(m, b, leftvertex, farvertex, rightvertex, nearvertex) <=
-        0.0) {
+    if ( tri_incircle( m, b, leftvertex, farvertex, rightvertex, nearvertex ) <=
+         0.0) {
       return;
     }
     /* Not locally Delaunay; go on to an edge flip. */
@@ -6263,7 +6263,7 @@ void constrainededge(mesh *m, behavior *b,
       /* Check whether farvertex is to the left or right of the segment */
       /*   being inserted, to decide which edge of fixuptri to dig      */
       /*   through next.                                                */
-      area = counterclockwise(m, b, endpoint1, endpoint2, farvertex);
+      area = tri_counterclockwise( m, b, endpoint1, endpoint2, farvertex );
       if (area == 0.0) {
         /* We've collided with a vertex between endpoint1 and endpoint2. */
         collision = 1;
@@ -6911,8 +6911,8 @@ void carveholes(mesh *m, behavior *b, REAL *holelist, int holes,
         /*   falls within the starting triangle.                      */
         org(searchtri, searchorg);
         dest(searchtri, searchdest);
-        if (counterclockwise(m, b, searchorg, searchdest, &holelist[i]) >
-            0.0) {
+        if ( tri_counterclockwise( m, b, searchorg, searchdest, &holelist[ i ] ) >
+             0.0) {
           /* Find a triangle that contains the hole. */
           intersect = locate(m, b, &holelist[i], &searchtri);
           if ((intersect != OUTSIDE) && (!infected(searchtri))) {
@@ -6950,8 +6950,8 @@ void carveholes(mesh *m, behavior *b, REAL *holelist, int holes,
         /*   region point falls within the starting triangle.           */
         org(searchtri, searchorg);
         dest(searchtri, searchdest);
-        if (counterclockwise(m, b, searchorg, searchdest, &regionlist[4 * i]) >
-            0.0) {
+        if ( tri_counterclockwise( m, b, searchorg, searchdest, &regionlist[ 4 * i ] ) >
+             0.0) {
           /* Find a triangle that contains the region point. */
           intersect = locate(m, b, &regionlist[4 * i], &searchtri);
           if ((intersect != OUTSIDE) && (!infected(searchtri))) {
@@ -7221,7 +7221,7 @@ void splitencsegs(mesh *m, behavior *b, int triflaws, int *status)
           /* Roundoff in the above calculation may yield a `newvertex'   */
           /*   that is not precisely collinear with `eorg' and `edest'.  */
           /*   Improve collinearity by one step of iterative refinement. */
-          multiplier = counterclockwise(m, b, eorg, edest, newvertex);
+          multiplier = tri_counterclockwise( m, b, eorg, edest, newvertex );
           divisor = ((eorg[0] - edest[0]) * (eorg[0] - edest[0]) +
                      (eorg[1] - edest[1]) * (eorg[1] - edest[1]));
           if ((multiplier != 0.0) && (divisor != 0.0)) {
@@ -7335,7 +7335,7 @@ void splittriangle(mesh *m, behavior *b,
       findNewSPLocation(m, b, borg, bdest, bapex, newvertex, &xi, &eta, 1, badotri);
     }
 #else
-    findcircumcenter(m, b, borg, bdest, bapex, newvertex, &xi, &eta, 1);
+      tri_findcircumcenter( m, b, borg, bdest, bapex, newvertex, &xi, &eta, 1 );
 #endif
 
     /* Check whether the new vertex lies on a triangle vertex. */
@@ -8116,7 +8116,7 @@ int quality_statistics(mesh *m, behavior *b, quality *q)
       }
     }
 
-    triarea = counterclockwise(m, b, p[0], p[1], p[2]);
+    triarea = tri_counterclockwise( m, b, p[ 0 ], p[ 1 ], p[ 2 ] );
     if (triarea < smallestarea) {
       smallestarea = triarea;
     }
