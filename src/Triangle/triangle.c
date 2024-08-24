@@ -1713,7 +1713,10 @@ void enqueuebadtriang(mesh *m, behavior *b,
 
   /* Determine the appropriate queue to put the bad triangle into.    */
   /*   Recall that the key is the square of its shortest edge length. */
-  if (badtri->key >= 1.0) {
+  if (badtri->key == 0.0) {
+    length = 0.0;
+    posexponent = 0;
+  } else if (badtri->key >= 1.0) {
     length = badtri->key;
     posexponent = 1;
   } else {
@@ -1736,6 +1739,9 @@ void enqueuebadtriang(mesh *m, behavior *b,
     /* Reduce the value of `length', then iterate if necessary. */
     exponent += expincrement;
     length *= multiplier;
+  }
+  if (length == 0.0) {
+    exponent = 1023;
   }
   /* `length' is approximately squareroot(2.0) to what exponent? */
   exponent = 2 * exponent + (length > SQUAREROOTTWO);
