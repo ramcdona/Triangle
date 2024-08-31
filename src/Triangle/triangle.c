@@ -2270,6 +2270,7 @@ enum locateresult preciselocate(mesh *m, behavior *b,
                                 vertex searchpoint, struct otri *searchtri,
                                 int stopatsubsegment)
 {
+  int count = 0;
   struct otri backtracktri;
   struct osub checkedge;
   vertex forg, fdest, fapex;
@@ -2352,7 +2353,13 @@ enum locateresult preciselocate(mesh *m, behavior *b,
       return OUTSIDE;
     }
 
+    if ( count > 10 )
+    {
+      return OUTSIDE;
+    }
+
     apex(*searchtri, fapex);
+    count++;
   }
 }
 
