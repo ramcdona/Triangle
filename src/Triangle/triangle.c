@@ -2270,7 +2270,7 @@ enum locateresult preciselocate(mesh *m, behavior *b,
                                 vertex searchpoint, struct otri *searchtri,
                                 int stopatsubsegment)
 {
-  int count = 0;
+  long count = 0;
   struct otri backtracktri;
   struct osub checkedge;
   vertex forg, fdest, fapex;
@@ -2353,7 +2353,10 @@ enum locateresult preciselocate(mesh *m, behavior *b,
       return OUTSIDE;
     }
 
-    if ( count > 10 )
+    /* Each step of the walk moves to a different triangle, so a walk that */
+    /*   has taken more steps than there are triangles is going in circles */
+    /*   Anything short of that is a legitimate walk across a large mesh.  */
+    if ( count > m->triangles.items )
     {
       return OUTSIDE;
     }
