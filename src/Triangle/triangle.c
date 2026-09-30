@@ -208,9 +208,16 @@
 #include "acute.h"
 #endif
 
-/* Random number seed is not constant, but I've made it global anyway.       */
+/* Random number seed.  Each thread has its own, set to 1 when a context is  */
+/* created, so a mesh does not depend on what other threads are meshing.    */
 
-unsigned long randomseed;                     /* Current random number seed. */
+#if defined(_MSC_VER)
+#define TRI_THREAD_LOCAL __declspec(thread)
+#else
+#define TRI_THREAD_LOCAL _Thread_local
+#endif
+
+static TRI_THREAD_LOCAL unsigned long randomseed;  /* Current random number seed. */
 
 /* Fast lookup arrays to speed some of the mesh manipulation primitives.     */
 
