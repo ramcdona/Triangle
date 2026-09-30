@@ -6274,6 +6274,12 @@ void constrainededge(mesh *m, behavior *b,
   done = 0;
   do {
     org(fixuptri, farvertex);
+    if (farvertex == (vertex) NULL) {
+      /* The dig has left the triangulation; the segment cannot be */
+      /*   inserted.                                                 */
+      *status = TRI_SEG_INSERT;
+      return;
+    }
     /* `farvertex' is the extreme point of the polygon we are "digging" */
     /*   to get from endpoint1 to endpoint2.                           */
     if ((farvertex[0] == endpoint2[0]) && (farvertex[1] == endpoint2[1])) {
@@ -6321,6 +6327,7 @@ void constrainededge(mesh *m, behavior *b,
           collision = 1;
           /* Insert a vertex at the intersection. */
           segmentintersection(m, b, &fixuptri, &crosssubseg, endpoint2, status);
+          if (*status < 0) return;
           done = 1;
         }
       }
