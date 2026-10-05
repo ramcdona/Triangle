@@ -1495,6 +1495,8 @@ void triangleinit(mesh *m)
   m->samples = 1;         /* Point location should take at least one sample. */
   m->checksegments = 0;   /* There are no segments in the triangulation yet. */
   m->checkquality = 0;     /* The quality triangulation stage has not begun. */
+  m->cyclefail = 0;
+  m->scoutsteps = 0;
   m->incirclecount = m->counterclockcount = m->orient3dcount = 0;
   m->hyperbolacount = m->circletopcount = m->circumcentercount = 0;
   randomseed = 1;
@@ -2933,6 +2935,7 @@ enum insertvertexresult insertvertex(mesh *m, behavior *b,
   enum insertvertexresult success;
   enum locateresult intersect;
   int doflip;
+  long circles;
   int mirrorflag;
   int enq;
   int i;
@@ -3255,8 +3258,17 @@ enum insertvertexresult insertvertex(mesh *m, behavior *b,
   org(horiz, first);
   rightvertex = first;
   dest(horiz, leftvertex);
-  /* Circle until finished. */
+  /* Circle until finished.  Each pass flips an edge, which adds a triangle */
+  /*   around the new vertex, or moves on to the next edge, so more passes   */
+  /*   than twice the triangles in the mesh means the flips are going in    */
+  /*   circles.  Input whose segments cross can leave the mesh that way.     */
+  /*   The vertex is in the mesh either way; the caller is told to stop.     */
+  circles = 0;
   while (1) {
+    if (++circles > 2 * m->triangles.items) {
+      m->cyclefail = 1;
+      return SUCCESSFULVERTEX;
+    }
     /* By default, the edge will be flipped. */
     doflip = 1;
 
@@ -5882,6 +5894,10 @@ void segmentintersection(mesh *m, behavior *b,
   setvertextype(newvertex, INPUTVERTEX);
   /* Insert the intersection vertex.  This should always succeed. */
   success = insertvertex(m, b, newvertex, splittri, splitsubseg, 0, 0, 0);
+  if (m->cyclefail) {
+    *status = TRI_CYCLE;
+    return;
+  }
   if (success != SUCCESSFULVERTEX) {
       // TODO: Internal error: segmentintersection()
       // Failure to split a segment.
@@ -5959,6 +5975,14 @@ int scoutsegment(mesh *m, behavior *b, struct otri *searchtri,
   vertex leftvertex, rightvertex;
   enum finddirectionresult collinear;
   subseg sptr;                      /* Temporary variable used by tspivot(). */
+
+  /* Each call reaches a vertex further along the segment, or is one of the */
+  /*   two that follow a midpoint conformingedge() adds, so more calls than */
+  /*   twice the vertices means the insertion is going in circles.          */
+  if (++m->scoutsteps > 2 * m->vertices.items) {
+    *status = TRI_SEG_SCOUT;
+    return TRI_SEG_SCOUT;
+  }
 
   collinear = finddirection(m, b, searchtri, endpoint2, status);
   if (*status < 0) return TRI_SEG_SCOUT;
@@ -6262,6 +6286,7 @@ void constrainededge(mesh *m, behavior *b,
   REAL area;
   int collision;
   int done;
+  long digs;
   triangle ptr;             /* Temporary variable used by sym() and oprev(). */
   subseg sptr;                      /* Temporary variable used by tspivot(). */
 
@@ -6272,7 +6297,14 @@ void constrainededge(mesh *m, behavior *b,
   /*   between endpoint1 and endpoint2.                            */
   collision = 0;
   done = 0;
+  digs = 0;
   do {
+    /* Each pass removes an edge crossing the segment, so more passes than */
+    /*   there are triangles means the dig is going in circles.            */
+    if (++digs > m->triangles.items) {
+      *status = TRI_SEG_INSERT;
+      return;
+    }
     org(fixuptri, farvertex);
     if (farvertex == (vertex) NULL) {
       /* The dig has left the triangulation; the segment cannot be */
@@ -6340,6 +6372,7 @@ void constrainededge(mesh *m, behavior *b,
   if (collision) {
     /* Insert the remainder of the segment. */
     if (!scoutsegment(m, b, &fixuptri, endpoint2, newmark, status)) {
+      if (*status < 0) return;
       constrainededge(m, b, &fixuptri, endpoint2, newmark, status);
     }
   }
@@ -6358,6 +6391,8 @@ void insertsegment(mesh *m, behavior *b,
   triangle encodedtri;
   vertex checkvertex;
   triangle ptr;                         /* Temporary variable used by sym(). */
+
+  m->scoutsteps = 0;
 
   /* Find a triangle whose origin is the segment's first endpoint. */
   checkvertex = (vertex) NULL;
@@ -7277,6 +7312,10 @@ void splitencsegs(mesh *m, behavior *b, int triflaws, int *status)
         /* Insert the splitting vertex.  This should always succeed. */
         success = insertvertex(m, b, newvertex, &enctri, &currentenc,
                                1, triflaws, 0);
+        if (m->cyclefail) {
+          *status = TRI_CYCLE;
+          return;
+        }
         if ((success != SUCCESSFULVERTEX) && (success != ENCROACHINGVERTEX)) {
           // TODO: Internal error: splitencsegs()
           // Failure to split a segment.
@@ -7495,6 +7534,10 @@ void enforcequality(mesh *m, behavior *b, int *status)
       /* Fix one bad triangle by inserting a vertex at its circumcenter. */
       badtri = dequeuebadtriang(m);
       splittriangle(m, b, badtri);
+      if (m->cyclefail) {
+        *status = TRI_CYCLE;
+        return;
+      }
       if (m->badsubsegs.items > 0) {
         /* Put bad triangle back in queue for another try later. */
         enqueuebadtriang(m, b, badtri);

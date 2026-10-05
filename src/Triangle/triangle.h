@@ -531,6 +531,8 @@ typedef struct mesh_t {
   int areaboundindex;             /* Index to find area bound of a triangle. */
   int checksegments;         /* Are there segments in the triangulation yet? */
   int checkquality;                  /* Has quality triangulation begun yet? */
+  int cyclefail;     /* Did vertex insertion start flipping edges in circles? */
+  long scoutsteps;    /* Vertices reached so far inserting the current segment. */
   long samples;              /* Number of random samples for point location. */
 
   long incirclecount;                 /* Number of incircle tests performed. */
