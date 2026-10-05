@@ -5884,6 +5884,15 @@ void segmentintersection(mesh *m, behavior *b,
 	  return;
   }
   split = (ey * etx - ex * ety) / denom;
+  /* The intersection lies on the subsegment being split, give or take    */
+  /*   roundoff.  Segments that are nearly parallel can give a denominator */
+  /*   so small that `split' is not finite, or lies well off the           */
+  /*   subsegment; inserting that vertex corrupts the mesh, or puts a      */
+  /*   point with NaN coordinates into it.                                 */
+  if (!(split >= -1.0e-9 && split <= 1.0 + 1.0e-9)) {
+      *status = TRI_SEG_INTERSECT;
+	  return;
+  }
   /* Create the new vertex. */
   newvertex = (vertex) poolalloc(&m->vertices);
   /* Interpolate its coordinate and attributes. */
@@ -7407,8 +7416,11 @@ void splittriangle(mesh *m, behavior *b,
       tri_findcircumcenter( m, b, borg, bdest, bapex, newvertex, &xi, &eta, 1 );
 #endif
 
-    /* Check whether the new vertex lies on a triangle vertex. */
-    if (((newvertex[0] == borg[0]) && (newvertex[1] == borg[1])) ||
+    /* Check whether the new vertex lies on a triangle vertex, or could not  */
+    /*   be placed at all: a triangle with no area has no circumcenter, and */
+    /*   the one computed for it is not finite.                             */
+    if (!isfinite(newvertex[0]) || !isfinite(newvertex[1]) ||
+        ((newvertex[0] == borg[0]) && (newvertex[1] == borg[1])) ||
         ((newvertex[0] == bdest[0]) && (newvertex[1] == bdest[1])) ||
         ((newvertex[0] == bapex[0]) && (newvertex[1] == bapex[1]))) {
 #ifdef _DEBUG
